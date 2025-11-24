@@ -65,7 +65,17 @@ bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, "Le bot est bien en ligne mon reuf 🔥");
 });
+import fs from "fs";
+import path from "path";
 
+// Endpoint pour récupérer les produits
+app.get("/products", (req, res) => {
+  const dataPath = path.join(process.cwd(), "data", "products.json");
+  fs.readFile(dataPath, "utf8", (err, data) => {
+    if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
+    res.json(JSON.parse(data));
+  });
+});
 // ----------------------------
 // Lancer serveur Express
 const port = process.env.PORT || 3000;
