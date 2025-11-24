@@ -8,7 +8,7 @@ if (!token) {
   process.exit(1);
 }
 
-const bot = new TelegramBot(token;),
+const bot = new TelegramBot(token);
 const app = express();
 app.use(express.json());
 
