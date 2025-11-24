@@ -5,10 +5,11 @@
   "dependencies": {
     "express": "^4.18.2",
     "node-telegram-bot-api": "^0.61.0"
-    "engines": {
+  },
+  "engines": {
     "node": "18.x"
-      "scripts": {
-  "start": "node indexCali4You.js"
-}
+  },
+  "scripts": {
+    "start": "node indexCali4You.js"
   }
 }
