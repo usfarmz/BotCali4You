@@ -8,7 +8,7 @@ if (!token) {
   process.exit(1);
 }
 
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token;),
 const app = express();
 app.use(express.json());
 
@@ -23,7 +23,7 @@ const panierGlobal = {};
 // ----------------------------
 // Endpoints HTTP pour ton site
 // Ajouter un produit au panier
-app.post("/ajouter", (req, res) => {
+app.post('/webhook', (req, res) => {
   const { userId, produit } = req.body;
 
   if (!userId || !produit) {
