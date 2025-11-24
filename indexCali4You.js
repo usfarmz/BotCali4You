@@ -1,5 +1,7 @@
 import express from "express";
 import TelegramBot from "node-telegram-bot-api";
+import fs from "fs";
+import path from "path";
 
 // 🔑 Token Telegram depuis Render
 const token = process.env.TELEGRAM_TOKEN;
@@ -8,9 +10,12 @@ if (!token) {
   process.exit(1);
 }
 
-const bot = new TelegramBot(token);
+// ⚡ Bot Telegram (polling désactivé pour webhook)
+const bot = new TelegramBot(token, { polling: false });
+
 const app = express();
 app.use(express.json());
+app.use(express.static('public')); // optionnel, pour fichiers statiques
 
 // ----------------------------
 // LOG pour vérifier que le bot tourne
@@ -21,14 +26,20 @@ console.log("Bot lancé !");
 const panierGlobal = {};
 
 // ----------------------------
-// Endpoints HTTP pour ton site
-// Ajouter un produit au panier
+// Endpoint pour récupérer les produits
+app.get("/products", (req, res) => {
+  const dataPath = path.join(process.cwd(), "data", "products.json");
+  fs.readFile(dataPath, "utf8", (err, data) => {
+    if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
+    res.json(JSON.parse(data));
+  });
+});
+
+// ----------------------------
+// Endpoints panier
 app.post('/webhook', (req, res) => {
   const { userId, produit } = req.body;
-
-  if (!userId || !produit) {
-    return res.status(400).json({ error: "userId ou produit manquant" });
-  }
+  if (!userId || !produit) return res.status(400).json({ error: "userId ou produit manquant" });
 
   if (!panierGlobal[userId]) panierGlobal[userId] = [];
   panierGlobal[userId].push(produit);
@@ -37,13 +48,9 @@ app.post('/webhook', (req, res) => {
   res.json({ status: "ok", panier: panierGlobal[userId] });
 });
 
-// Supprimer un produit du panier
 app.post("/supprimer", (req, res) => {
   const { userId, produit } = req.body;
-
-  if (!userId || !produit) {
-    return res.status(400).json({ error: "userId ou produit manquant" });
-  }
+  if (!userId || !produit) return res.status(400).json({ error: "userId ou produit manquant" });
 
   if (!panierGlobal[userId]) panierGlobal[userId] = [];
   panierGlobal[userId] = panierGlobal[userId].filter(p => p !== produit);
@@ -52,7 +59,6 @@ app.post("/supprimer", (req, res) => {
   res.json({ status: "ok", panier: panierGlobal[userId] });
 });
 
-// Voir le panier
 app.get("/panier/:userId", (req, res) => {
   const { userId } = req.params;
   const panier = panierGlobal[userId] || [];
@@ -65,20 +71,10 @@ bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, "Le bot est bien en ligne mon reuf 🔥");
 });
-import fs from "fs";
-import path from "path";
 
-// Endpoint pour récupérer les produits
-app.get("/products", (req, res) => {
-  const dataPath = path.join(process.cwd(), "data", "products.json");
-  fs.readFile(dataPath, "utf8", (err, data) => {
-    if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
-    res.json(JSON.parse(data));
-  });
-});
 // ----------------------------
 // Lancer serveur Express
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 app.listen(port, () => {
   console.log(`Serveur Render démarré sur le port ${port}`);
 });
