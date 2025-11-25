@@ -27,14 +27,14 @@ console.log("Bot lancé !");
 const panierGlobal = {};
 
 // ----------------------------
-// 🔥 Nouvelle fonction — Récupérer les produits depuis Render
+// 🔥 Fonction — Récupérer les produits depuis Render
 const API_URL = "https://botcali4you-2.onrender.com/products";
 
 async function getProducts() {
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
-    return data;
+    return data.products || data;
   } catch (err) {
     console.error("Erreur API Render :", err);
     return [];
@@ -42,7 +42,7 @@ async function getProducts() {
 }
 
 // ----------------------------
-// Endpoint pour récupérer les produits (local)
+// Endpoint local pour les produits
 app.get("/products", (req, res) => {
   const dataPath = path.join(process.cwd(), "data", "products.json");
   fs.readFile(dataPath, "utf8", (err, data) => {
@@ -84,17 +84,17 @@ app.get("/panier/:userId", (req, res) => {
 // ----------------------------
 // 🔥 Endpoint webhook pour Telegram
 app.post('/telegram-webhook', (req, res) => {
-  bot.processUpdate(req.body); // Telegram envoie l’update ici
+  bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
 // ----------------------------
-// 🔥 Configurer le webhook Telegram
-const WEBHOOK_URL = "https://usfarmz69.infinityfree.me/telegram-webhook"; // <- Remplace par ton URL Render si besoin
+// 🔥 Configurer le webhook Telegram (laisse-le, ça ne pose pas de problème)
+const WEBHOOK_URL = "https://botcali4you-2.onrender.com/telegram-webhook";
 bot.setWebHook(WEBHOOK_URL);
 
 // ----------------------------
-// Bot Commande /produits
+// Commande /produits
 bot.onText(/produits/i, async (msg) => {
   const chatId = msg.chat.id;
 
@@ -119,9 +119,14 @@ bot.onText(/produits/i, async (msg) => {
 });
 
 // ----------------------------
-// Bot Telegram simple (ping)
+// Commande /start ou messages généraux
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
+  const text = msg.text;
+
+  // Ne rien faire si c'est une commande gérée par onText
+  if (text.startsWith("/produits")) return;
+
   bot.sendMessage(chatId, "Le bot est bien en ligne mon reuf 🔥");
 });
 
