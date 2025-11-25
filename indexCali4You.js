@@ -2,6 +2,7 @@ import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import fs from "fs";
 import path from "path";
+import fetch from "node-fetch"; // <<--- AJOUT IMPORTANT
 
 // 🔑 Token Telegram depuis Render
 const token = process.env.TELEGRAM_TOKEN;
@@ -25,8 +26,25 @@ console.log("Bot lancé !");
 // Stockage du panier en mémoire (pour l’instant)
 const panierGlobal = {};
 
+
 // ----------------------------
-// Endpoint pour récupérer les produits
+// 🔥 Nouvelle fonction — Récupérer les produits depuis Render
+const API_URL = "https://botcali4you-2.onrender.com/products";
+
+async function getProducts() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Erreur API Render :", err);
+    return [];
+  }
+}
+
+
+// ----------------------------
+// Endpoint pour récupérer les produits (local)
 app.get("/products", (req, res) => {
   const dataPath = path.join(process.cwd(), "data", "products.json");
   fs.readFile(dataPath, "utf8", (err, data) => {
@@ -65,8 +83,35 @@ app.get("/panier/:userId", (req, res) => {
   res.json({ panier });
 });
 
+
 // ----------------------------
-// Bot Telegram simple
+// 🔥 Bot Commande /produits
+bot.onText(/produits/i, async (msg) => {
+  const chatId = msg.chat.id;
+
+  const produits = await getProducts();
+
+  if (produits.length === 0) {
+    bot.sendMessage(chatId, "❌ Aucun produit trouvé.");
+    return;
+  }
+
+  let text = "📦 *Liste des produits disponibles :*\n\n";
+
+  produits.forEach(p => {
+    text += `🔥 *${p.name}*\n`;
+    text += `🏷️ ${p.tag}\n`;
+    text += `💶 Prix: ${Object.keys(p.price).join(", ")}\n`;
+    text += `📦 Stock: ${p.stock}\n`;
+    text += `📝 ${p.desc}\n\n`;
+  });
+
+  bot.sendMessage(chatId, text, { parse_mode: "Markdown" });
+});
+
+
+// ----------------------------
+// Bot Telegram simple (ping)
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, "Le bot est bien en ligne mon reuf 🔥");
