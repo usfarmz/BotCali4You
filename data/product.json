@@ -3,24 +3,36 @@
     "name": "Bientot dispo",
     "tag": "90u Premium",
     "description": "Bientot dispo",
-    "image": "https://usfarmz69.infinityfree.me/images/IMG.png"
+    "image": "https://usfarmz69.infinityfree.me/images/IMG.png",
+    "price": {
+      "1g": 0
+    }
   },
   {
     "name": "Bientot dispo",
     "tag": "Cali 🇺🇸",
     "description": "Unbranded",
-    "image": "https://usfarmz69.infinityfree.me/images/IMG2.png"
+    "image": "https://usfarmz69.infinityfree.me/images/IMG2.png",
+    "price": {
+      "1g": 0
+    }
   },
   {
     "name": "Bientot dispo",
     "tag": "Cali 🇺🇸",
     "description": "Seller",
-    "image": "https://usfarmz69.infinityfree.me/images/IMG2.png"
+    "image": "https://usfarmz69.infinityfree.me/images/IMG2.png",
+    "price": {
+      "1g": 0
+    }
   },
   {
     "name": "Bientot dispo",
     "tag": "Cali 🇺🇸",
     "description": "Seller",
-    "image": "https://usfarmz69.infinityfree.me/images/IMG2.png"
+    "image": "https://usfarmz69.infinityfree.me/images/IMG2.png",
+    "price": {
+      "1g": 0
+    }
   }
 ]
