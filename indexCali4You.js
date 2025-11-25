@@ -1,47 +1,58 @@
 import express from "express";
 import TelegramBot from "node-telegram-bot-api";
-import fs from "fs";
-import path from "path";
 import fetch from "node-fetch";
+import path from "path";
 
-// ----------------------------
-// Token Telegram depuis Render
+// 🔑 Token Telegram depuis Render
 const token = process.env.TELEGRAM_TOKEN;
 if (!token) {
   console.error("ERREUR: TELEGRAM_TOKEN absent");
   process.exit(1);
 }
 
-// ⚡ Bot Telegram (webhook)
+// ⚡ Bot Telegram (polling désactivé pour webhook)
 const bot = new TelegramBot(token, { polling: false });
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public')); // si tu as des fichiers statiques
+app.use(express.static('public'));
 
 // ----------------------------
-// LOG pour vérifier
+// LOG
 console.log("Bot lancé !");
 
 // ----------------------------
-// Stockage panier en mémoire
+// Panier en mémoire
 const panierGlobal = {};
 
 // ----------------------------
-// Endpoint local pour récupérer les produits
+// Endpoint pour servir le fichier product.json
 app.get("/products", (req, res) => {
-  const dataPath = path.join(process.cwd(), "data", "product.json"); // Chemin vers ton JSON
-  fs.readFile(dataPath, "utf8", (err, data) => {
-    if (err) {
-      console.error("Impossible de lire product.json :", err);
-      return res.status(500).json({ error: "Impossible de lire les produits" });
-    }
-    res.json(JSON.parse(data));
-  });
+  res.sendFile(path.join(process.cwd(), "data", "product.json"));
 });
 
 // ----------------------------
-// Endpoints panier
+// Fonction pour récupérer les produits depuis l’API
+const API_URL = "https://botcali4you-2.onrender.com/products";
+
+async function getProducts() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.products)) return data.products;
+
+    console.error("Format inattendu des produits :", data);
+    return [];
+  } catch (err) {
+    console.error("Erreur API Render :", err);
+    return [];
+  }
+}
+
+// ----------------------------
+// Endpoints pour le panier
 app.post('/webhook', (req, res) => {
   const { userId, product } = req.body;
   if (!userId || !product) return res.status(400).json({ error: "userId ou product manquant" });
@@ -77,25 +88,9 @@ app.post('/telegram-webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-// Configurer le webhook (une seule fois)
+// Configurer le webhook Telegram
 const WEBHOOK_URL = "https://botcali4you-2.onrender.com/telegram-webhook";
 bot.setWebHook(WEBHOOK_URL);
-
-// ----------------------------
-// Fonction pour récupérer les produits depuis le JSON ou Render
-async function getProducts() {
-  try {
-    const res = await fetch("https://botcali4you-2.onrender.com/products");
-    const data = await res.json();
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.products)) return data.products;
-    console.error("Format inattendu des produits :", data);
-    return [];
-  } catch (err) {
-    console.error("Erreur API Render :", err);
-    return [];
-  }
-}
 
 // ----------------------------
 // Commande /produits
@@ -130,6 +125,6 @@ bot.on("message", (msg) => {
 });
 
 // ----------------------------
-// Lancer serveur
+// Lancer serveur Express
 const port = process.env.PORT || 10000;
 app.listen(port, () => console.log(`Serveur Render démarré sur le port ${port}`));
