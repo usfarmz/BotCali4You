@@ -30,7 +30,7 @@ const panierGlobal = {};
 // 🔥 Fonction — Récupérer les produits depuis Render
 const API_URL = "https://botcali4you-2.onrender.com/product";
 
-async function getProduct() {
+async function getproduct() {
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
