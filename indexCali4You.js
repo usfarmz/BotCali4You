@@ -34,7 +34,13 @@ async function getProducts() {
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
-    return data.products || data;
+
+    // Assurer que c'est bien un tableau
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.products)) return data.products;
+
+    console.error("Erreur : format inattendu des produits", data);
+    return [];
   } catch (err) {
     console.error("Erreur API Render :", err);
     return [];
