@@ -2,7 +2,7 @@ import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import fs from "fs";
 import path from "path";
-import fetch from "node-fetch"; // important
+import fetch from "node-fetch";
 
 // 🔑 Token Telegram depuis Render
 const token = process.env.TELEGRAM_TOKEN;
@@ -27,32 +27,37 @@ console.log("Bot lancé !");
 const panierGlobal = {};
 
 // ----------------------------
-// 🔥 Fonction pour récupérer les produits depuis Render
-const API_URL = "https://botcali4you-2.onrender.com/products"; // pluriel
+// 🔥 Fonction pour récupérer les produits (local ou Render)
+const API_URL = "https://botcali4you-2.onrender.com/products";
 
 async function getProducts() {
+  // 1️⃣ Essayer de lire le fichier local
+  const localPath = path.join(process.cwd(), "data", "product.json");
+  try {
+    if (fs.existsSync(localPath)) {
+      const raw = fs.readFileSync(localPath, "utf8");
+      const data = JSON.parse(raw);
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.products)) return data.products;
+      console.warn("Fichier local présent mais format inattendu :", data);
+    }
+  } catch (err) {
+    console.warn("Impossible de lire le fichier local, on passe à l'API Render", err);
+  }
+
+  // 2️⃣ Sinon, récupérer depuis l'API Render
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
     if (Array.isArray(data)) return data;
     if (Array.isArray(data.products)) return data.products;
-    console.error("Format inattendu :", data);
+    console.error("API Render : format inattendu", data);
     return [];
   } catch (err) {
     console.error("Erreur API Render :", err);
     return [];
   }
 }
-
-// ----------------------------
-// Endpoint local (optionnel)
-app.get("/products", (req, res) => {
-  const dataPath = path.join(process.cwd(), "data", "product.json");
-  fs.readFile(dataPath, "utf8", (err, data) => {
-    if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
-    res.json(JSON.parse(data));
-  });
-});
 
 // ----------------------------
 // Endpoints panier
@@ -98,16 +103,14 @@ bot.setWebHook(WEBHOOK_URL);
 // Commande /produits
 bot.onText(/produits/i, async (msg) => {
   const chatId = msg.chat.id;
-
   const produits = await getProducts();
 
-  if (produits.length === 0) {
+  if (!produits || produits.length === 0) {
     bot.sendMessage(chatId, "❌ Aucun produit trouvé.");
     return;
   }
 
   let text = "📦 *Liste des produits disponibles :*\n\n";
-
   produits.forEach(p => {
     text += `🔥 *${p.name}*\n`;
     text += `🏷️ ${p.tag}\n`;
@@ -124,7 +127,6 @@ bot.onText(/produits/i, async (msg) => {
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-
   if (text && text.startsWith("/produits")) return; // déjà géré
   bot.sendMessage(chatId, "Le bot est bien en ligne mon reuf 🔥");
 });
