@@ -28,16 +28,16 @@ const panierGlobal = {};
 
 // ----------------------------
 // 🔥 Fonction — Récupérer les produits depuis Render
-const API_URL = "https://botcali4you-2.onrender.com/products";
+const API_URL = "https://botcali4you-2.onrender.com/product";
 
-async function getProducts() {
+async function getProduct() {
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
 
     // Assurer que c'est bien un tableau
     if (Array.isArray(data)) return data;
-    if (Array.isArray(data.products)) return data.products;
+    if (Array.isArray(data.product)) return data.product;
 
     console.error("Erreur : format inattendu des produits", data);
     return [];
@@ -50,7 +50,7 @@ async function getProducts() {
 // ----------------------------
 // Endpoint local pour les produits
 app.get("/products", (req, res) => {
-  const dataPath = path.join(process.cwd(), "data", "produits.json");
+  const dataPath = path.join(process.cwd(), "data", "product.json");
   fs.readFile(dataPath, "utf8", (err, data) => {
     if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
     res.json(JSON.parse(data));
@@ -104,7 +104,7 @@ bot.setWebHook(WEBHOOK_URL);
 bot.onText(/produits/i, async (msg) => {
   const chatId = msg.chat.id;
 
-  const produits = await getProducts();
+  const produits = await getProduct();
 
   if (produits.length === 0) {
     bot.sendMessage(chatId, "❌ Aucun produit trouvé.");
