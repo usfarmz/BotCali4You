@@ -50,7 +50,7 @@ async function getProducts() {
 // ----------------------------
 // Endpoint local pour les produits
 app.get("/products", (req, res) => {
-  const dataPath = path.join(process.cwd(), "data", "produit.json");
+  const dataPath = path.join(process.cwd(), "data", "produits.json");
   fs.readFile(dataPath, "utf8", (err, data) => {
     if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
     res.json(JSON.parse(data));
