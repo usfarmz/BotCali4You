@@ -1,5 +1,7 @@
 import express from "express";
 import TelegramBot from "node-telegram-bot-api";
+import fs from "fs";
+import path from "path";
 import fetch from "node-fetch";
 
 // 🔑 Token Telegram depuis Render
@@ -25,7 +27,20 @@ console.log("Bot lancé !");
 const panierGlobal = {};
 
 // ----------------------------
-// 🔥 Fonction pour récupérer les produits depuis Render
+// Endpoint local pour les produits
+app.get("/products", (req, res) => {
+  const dataPath = path.join(process.cwd(), "data", "product.json");
+  fs.readFile(dataPath, "utf8", (err, data) => {
+    if (err) {
+      console.error("Impossible de lire les produits", err);
+      return res.status(500).json({ error: "Impossible de lire les produits" });
+    }
+    res.json(JSON.parse(data));
+  });
+});
+
+// ----------------------------
+// Fonction pour récupérer les produits (depuis API ou local)
 const API_URL = "https://botcali4you-2.onrender.com/products";
 
 async function getProducts() {
