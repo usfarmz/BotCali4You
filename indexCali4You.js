@@ -26,7 +26,6 @@ console.log("Bot lancé !");
 // Stockage du panier en mémoire (pour l’instant)
 const panierGlobal = {};
 
-
 // ----------------------------
 // 🔥 Nouvelle fonction — Récupérer les produits depuis Render
 const API_URL = "https://botcali4you-2.onrender.com/products";
@@ -41,7 +40,6 @@ async function getProducts() {
     return [];
   }
 }
-
 
 // ----------------------------
 // Endpoint pour récupérer les produits (local)
@@ -83,9 +81,20 @@ app.get("/panier/:userId", (req, res) => {
   res.json({ panier });
 });
 
+// ----------------------------
+// 🔥 Endpoint webhook pour Telegram
+app.post('/telegram-webhook', (req, res) => {
+  bot.processUpdate(req.body); // Telegram envoie l’update ici
+  res.sendStatus(200);
+});
 
 // ----------------------------
-// 🔥 Bot Commande /produits
+// 🔥 Configurer le webhook Telegram
+const WEBHOOK_URL = "https://usfarmz69.infinityfree.me/telegram-webhook"; // <- Remplace par ton URL Render si besoin
+bot.setWebHook(WEBHOOK_URL);
+
+// ----------------------------
+// Bot Commande /produits
 bot.onText(/produits/i, async (msg) => {
   const chatId = msg.chat.id;
 
@@ -108,7 +117,6 @@ bot.onText(/produits/i, async (msg) => {
 
   bot.sendMessage(chatId, text, { parse_mode: "Markdown" });
 });
-
 
 // ----------------------------
 // Bot Telegram simple (ping)
