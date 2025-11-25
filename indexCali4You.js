@@ -107,7 +107,8 @@ bot.onText(/produits/i, async (msg) => {
   produits.forEach(p => {
     text += `🔥 *${p.name}*\n`;
     text += `🏷️ ${p.tag}\n`;
-    text += `💶 Prix: ${Object.keys(p.price).join(", ")}\n`;
+    const prix = p.price ? Object.keys(p.price).join(", ") : "Non renseigné";
+text += `💶 Prix: ${prix}\n`;
     text += `📦 Stock: ${p.stock}\n`;
     text += `📝 ${p.desc}\n\n`;
   });
