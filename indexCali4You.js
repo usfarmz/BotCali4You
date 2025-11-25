@@ -3,6 +3,19 @@ import TelegramBot from "node-telegram-bot-api";
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
+import path from "path";
+import fs from "fs";
+
+app.get("/products", (req, res) => {
+  const dataPath = path.join(process.cwd(), "main", "data", "product.json"); // <-- chemin correct
+  fs.readFile(dataPath, "utf8", (err, data) => {
+    if (err) {
+      console.error("Impossible de lire le fichier product.json :", err);
+      return res.status(500).json({ error: "Impossible de lire les produits" });
+    }
+    res.json(JSON.parse(data));
+  });
+});
 
 // 🔑 Token Telegram depuis Render
 const token = process.env.TELEGRAM_TOKEN;
