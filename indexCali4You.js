@@ -23,34 +23,36 @@ app.use(express.static('public'));
 console.log("Bot lancé !");
 
 // ----------------------------
-// Panier
+// Panier global
 const panierGlobal = {};
 
 // ----------------------------
-// Endpoint local pour les produits
-app.get("/products", (req, res) => {
-  const dataPath = path.join(process.cwd(), "data", "product.json");
-  fs.readFile(dataPath, "utf8", (err, data) => {
-    if (err) {
-      console.error("Impossible de lire les produits", err);
-      return res.status(500).json({ error: "Impossible de lire les produits" });
-    }
-    res.json(JSON.parse(data));
-  });
-});
-
-// ----------------------------
-// Fonction pour récupérer les produits (depuis API ou local)
+// API Render
 const API_URL = "https://botcali4you-2.onrender.com/products";
 
+// ----------------------------
+// Fonction pour récupérer les produits
 async function getProducts() {
+  // 1️⃣ Essayer de lire depuis le fichier local main/data/product.json
+  const dataPath = path.join(process.cwd(), "main", "data", "product.json");
+  try {
+    if (fs.existsSync(dataPath)) {
+      const raw = fs.readFileSync(dataPath, "utf8");
+      const data = JSON.parse(raw);
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.products)) return data.products;
+      console.warn("Fichier local présent mais format inattendu :", data);
+    }
+  } catch (err) {
+    console.warn("Impossible de lire le fichier local, on passe à l'API Render", err);
+  }
+
+  // 2️⃣ Sinon récupérer depuis l'API Render
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
-
     if (Array.isArray(data)) return data;
     if (Array.isArray(data.products)) return data.products;
-
     console.error("API Render : format inattendu", data);
     return [];
   } catch (err) {
@@ -96,6 +98,8 @@ app.post('/telegram-webhook', (req, res) => {
   res.sendStatus(200);
 });
 
+// ----------------------------
+// Configurer le webhook Telegram
 const WEBHOOK_URL = "https://botcali4you-2.onrender.com/telegram-webhook";
 bot.setWebHook(WEBHOOK_URL);
 
