@@ -49,7 +49,7 @@ async function getproduct() {
 
 // ----------------------------
 // Endpoint local pour les produits
-app.get("/products", (req, res) => {
+app.get("/product", (req, res) => {
   const dataPath = path.join(process.cwd(), "data", "product.json");
   fs.readFile(dataPath, "utf8", (err, data) => {
     if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
@@ -60,7 +60,7 @@ app.get("/products", (req, res) => {
 // ----------------------------
 // Endpoints panier
 app.post('/webhook', (req, res) => {
-  const { userId, produit } = req.body;
+  const { userId, product } = req.body;
   if (!userId || !produit) return res.status(400).json({ error: "userId ou produit manquant" });
 
   if (!panierGlobal[userId]) panierGlobal[userId] = [];
@@ -71,13 +71,13 @@ app.post('/webhook', (req, res) => {
 });
 
 app.post("/supprimer", (req, res) => {
-  const { userId, produit } = req.body;
-  if (!userId || !produit) return res.status(400).json({ error: "userId ou produit manquant" });
+  const { userId, product } = req.body;
+  if (!userId || !product) return res.status(400).json({ error: "userId ou produit manquant" });
 
   if (!panierGlobal[userId]) panierGlobal[userId] = [];
-  panierGlobal[userId] = panierGlobal[userId].filter(p => p !== produit);
+  panierGlobal[userId] = panierGlobal[userId].filter(p => p !== product);
 
-  console.log(`Utilisateur ${userId} a supprimé: ${produit}`);
+  console.log(`Utilisateur ${userId} a supprimé: ${product}`);
   res.json({ status: "ok", panier: panierGlobal[userId] });
 });
 
