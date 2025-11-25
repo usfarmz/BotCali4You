@@ -1,7 +1,5 @@
 import express from "express";
 import TelegramBot from "node-telegram-bot-api";
-import fs from "fs";
-import path from "path";
 import fetch from "node-fetch";
 
 // 🔑 Token Telegram depuis Render
@@ -27,30 +25,17 @@ console.log("Bot lancé !");
 const panierGlobal = {};
 
 // ----------------------------
-// 🔥 Fonction pour récupérer les produits (local ou Render)
+// 🔥 Fonction pour récupérer les produits depuis Render
 const API_URL = "https://botcali4you-2.onrender.com/products";
 
 async function getProducts() {
-  // 1️⃣ Essayer de lire le fichier local
-  const localPath = path.join(process.cwd(), "data", "product.json");
-  try {
-    if (fs.existsSync(localPath)) {
-      const raw = fs.readFileSync(localPath, "utf8");
-      const data = JSON.parse(raw);
-      if (Array.isArray(data)) return data;
-      if (Array.isArray(data.products)) return data.products;
-      console.warn("Fichier local présent mais format inattendu :", data);
-    }
-  } catch (err) {
-    console.warn("Impossible de lire le fichier local, on passe à l'API Render", err);
-  }
-
-  // 2️⃣ Sinon, récupérer depuis l'API Render
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
+
     if (Array.isArray(data)) return data;
     if (Array.isArray(data.products)) return data.products;
+
     console.error("API Render : format inattendu", data);
     return [];
   } catch (err) {
