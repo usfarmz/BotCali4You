@@ -2,7 +2,7 @@ import express from "express";
 import TelegramBot from "node-telegram-bot-api";
 import fs from "fs";
 import path from "path";
-import fetch from "node-fetch"; // <<--- AJOUT IMPORTANT
+import fetch from "node-fetch"; // important
 
 // 🔑 Token Telegram depuis Render
 const token = process.env.TELEGRAM_TOKEN;
@@ -16,30 +16,27 @@ const bot = new TelegramBot(token, { polling: false });
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public')); // optionnel, pour fichiers statiques
+app.use(express.static('public'));
 
 // ----------------------------
-// LOG pour vérifier que le bot tourne
+// LOG
 console.log("Bot lancé !");
 
 // ----------------------------
-// Stockage du panier en mémoire (pour l’instant)
+// Panier
 const panierGlobal = {};
 
 // ----------------------------
-// 🔥 Fonction — Récupérer les produits depuis Render
-const API_URL = "https://botcali4you-2.onrender.com/product";
+// 🔥 Fonction pour récupérer les produits depuis Render
+const API_URL = "https://botcali4you-2.onrender.com/products"; // pluriel
 
-async function getproduct() {
+async function getProducts() {
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
-
-    // Assurer que c'est bien un tableau
     if (Array.isArray(data)) return data;
-    if (Array.isArray(data.product)) return data.product;
-
-    console.error("Erreur : format inattendu des produits", data);
+    if (Array.isArray(data.products)) return data.products;
+    console.error("Format inattendu :", data);
     return [];
   } catch (err) {
     console.error("Erreur API Render :", err);
@@ -48,8 +45,8 @@ async function getproduct() {
 }
 
 // ----------------------------
-// Endpoint local pour les produits
-app.get("/product", (req, res) => {
+// Endpoint local (optionnel)
+app.get("/products", (req, res) => {
   const dataPath = path.join(process.cwd(), "data", "product.json");
   fs.readFile(dataPath, "utf8", (err, data) => {
     if (err) return res.status(500).json({ error: "Impossible de lire les produits" });
@@ -61,18 +58,18 @@ app.get("/product", (req, res) => {
 // Endpoints panier
 app.post('/webhook', (req, res) => {
   const { userId, product } = req.body;
-  if (!userId || !produit) return res.status(400).json({ error: "userId ou produit manquant" });
+  if (!userId || !product) return res.status(400).json({ error: "userId ou product manquant" });
 
   if (!panierGlobal[userId]) panierGlobal[userId] = [];
-  panierGlobal[userId].push(produit);
+  panierGlobal[userId].push(product);
 
-  console.log(`Utilisateur ${userId} a ajouté: ${produit}`);
+  console.log(`Utilisateur ${userId} a ajouté: ${product}`);
   res.json({ status: "ok", panier: panierGlobal[userId] });
 });
 
 app.post("/supprimer", (req, res) => {
   const { userId, product } = req.body;
-  if (!userId || !product) return res.status(400).json({ error: "userId ou produit manquant" });
+  if (!userId || !product) return res.status(400).json({ error: "userId ou product manquant" });
 
   if (!panierGlobal[userId]) panierGlobal[userId] = [];
   panierGlobal[userId] = panierGlobal[userId].filter(p => p !== product);
@@ -88,14 +85,12 @@ app.get("/panier/:userId", (req, res) => {
 });
 
 // ----------------------------
-// 🔥 Endpoint webhook pour Telegram
+// Webhook Telegram
 app.post('/telegram-webhook', (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
-// ----------------------------
-// 🔥 Configurer le webhook Telegram (laisse-le, ça ne pose pas de problème)
 const WEBHOOK_URL = "https://botcali4you-2.onrender.com/telegram-webhook";
 bot.setWebHook(WEBHOOK_URL);
 
@@ -104,7 +99,7 @@ bot.setWebHook(WEBHOOK_URL);
 bot.onText(/produits/i, async (msg) => {
   const chatId = msg.chat.id;
 
-  const produits = await getProduct();
+  const produits = await getProducts();
 
   if (produits.length === 0) {
     bot.sendMessage(chatId, "❌ Aucun produit trouvé.");
@@ -125,20 +120,16 @@ bot.onText(/produits/i, async (msg) => {
 });
 
 // ----------------------------
-// Commande /start ou messages généraux
+// Commande /start
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
-  // Ne rien faire si c'est une commande gérée par onText
-  if (text.startsWith("/produits")) return;
-
+  if (text && text.startsWith("/produits")) return; // déjà géré
   bot.sendMessage(chatId, "Le bot est bien en ligne mon reuf 🔥");
 });
 
 // ----------------------------
-// Lancer serveur Express
+// Lancer serveur
 const port = process.env.PORT || 10000;
-app.listen(port, () => {
-  console.log(`Serveur Render démarré sur le port ${port}`);
-});
+app.listen(port, () => console.log(`Serveur Render démarré sur le port ${port}`));
